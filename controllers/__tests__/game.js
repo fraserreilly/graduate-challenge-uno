@@ -208,5 +208,107 @@ describe('game controller', () => {
         Message: 'Invalid letter format',
       });
     });
+    it('Should return 400 when game is over', () => {
+      req.params = {
+        gameId: mockId,
+      };
+      req.body = {
+        letter: 'a',
+      };
+      games[mockId].status = 'Won';
+
+      createGuess(req, res);
+
+      expect(res.status).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledTimes(1);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Message: 'Game is over',
+        })
+      );
+    });
+    it('Should return 400 when letter has already been guessed', () => {
+      req.params = {
+        gameId: mockId,
+      };
+      req.body = {
+        letter: 'a',
+      };
+      games[mockId].incorrectGuesses.push('a');
+
+      createGuess(req, res);
+
+      expect(res.status).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledTimes(1);
+      expect(res.json).toHaveBeenCalledWith({
+        Message: 'Letter already guessed',
+      });
+    });
+    it('Should return 200 when letter is correct', () => {
+      req.params = {
+        gameId: mockId,
+      };
+      req.body = {
+        letter: 'e',
+      };
+
+      createGuess(req, res);
+
+      expect(res.status).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledTimes(1);
+      expect(res.json).toHaveBeenCalledWith({
+        remainingGuesses: 5,
+        word: '_e__',
+        status: 'In Progress',
+        incorrectGuesses: [],
+      });
+    });
+    it('Should return 200 when game is won', () => {
+      req.params = {
+        gameId: mockId,
+      };
+      req.body = {
+        letter: 'e',
+      };
+
+      games[mockId].word = 't_st';
+
+      createGuess(req, res);
+
+      expect(res.status).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledTimes(1);
+      expect(res.json).toHaveBeenCalledWith({
+        remainingGuesses: 5,
+        word: 'test',
+        status: 'Won',
+        incorrectGuesses: [],
+      });
+    });
+    it('Should return 200 when game is lost', () => {
+      req.params = {
+        gameId: mockId,
+      };
+      req.body = {
+        letter: 'a',
+      };
+
+      games[mockId].remainingGuesses = 1;
+
+      createGuess(req, res);
+
+      expect(res.status).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledTimes(1);
+      expect(res.json).toHaveBeenCalledWith({
+        remainingGuesses: 0,
+        word: '____',
+        status: 'Lost',
+        incorrectGuesses: ['a'],
+      });
+    });
   });
 });

@@ -84,13 +84,13 @@ function createGuess(req, res) {
   if (game.status !== 'In Progress')
     return res
       .status(400)
-      .json(...clearUnmaskedWord(game), { Message: 'Game is over' });
+      .json({ ...clearUnmaskedWord(game), Message: 'Game is over' });
 
   if (
     game.incorrectGuesses.includes(letter.toLowerCase()) ||
     game.word.includes(letter)
   ) {
-    return res.status(200).json({
+    return res.status(400).json({
       Message: 'Letter already guessed',
     });
   }
@@ -114,11 +114,11 @@ function createGuess(req, res) {
       return res.status(200).json(clearUnmaskedWord(game));
     }
   } else {
+    game.incorrectGuesses.push(letter.toLowerCase());
     if (game.remainingGuesses <= 0) {
       game.status = 'Lost';
       return res.status(200).json(clearUnmaskedWord(game));
     }
-    game.incorrectGuesses.push(letter.toLowerCase());
   }
 
   return res.status(200).json(clearUnmaskedWord(game));
